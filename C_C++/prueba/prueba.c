@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+void handleError(int fd);
+
 int main()
 {
     // Export the desired pin by writing to /sys/class/gpio/export
@@ -18,6 +20,7 @@ int main()
 
     if (write(fd, "16", 2) != 2) {
         perror("Error writing to /sys/class/gpio/export");
+		handleError(fd);
         exit(1);
     }
 
@@ -28,11 +31,13 @@ int main()
     fd = open("/sys/class/gpio/gpio16/direction", O_WRONLY);
     if (fd == -1) {
         perror("Unable to open /sys/class/gpio/gpio16/direction");
+		handleError(fd);
         exit(1);
     }
 
     if (write(fd, "out", 3) != 3) {
         perror("Error writing to /sys/class/gpio/gpio16/direction");
+		handleError(fd);
         exit(1);
     }
 
@@ -41,6 +46,7 @@ int main()
     fd = open("/sys/class/gpio/gpio16/value", O_WRONLY);
     if (fd == -1) {
         perror("Unable to open /sys/class/gpio/gpio16/value");
+		handleError(fd);
         exit(1);
     }
 
@@ -49,12 +55,14 @@ int main()
     for (int i = 0; i < 100; i++) {
         if (write(fd, "1", 1) != 1) {
             perror("Error writing to /sys/class/gpio/gpio16/value");
+			handleError(fd);
             exit(1);
         }
         usleep(50000);
 
         if (write(fd, "0", 1) != 1) {
             perror("Error writing to /sys/class/gpio/gpio16/value");
+			handleError(fd);
             exit(1);
         }
         usleep(50000);
@@ -72,6 +80,7 @@ int main()
 
     if (write(fd, "16", 2) != 2) {
         perror("Error writing to /sys/class/gpio/unexport");
+		handleError(fd);
         exit(1);
     }
 
@@ -79,4 +88,19 @@ int main()
 
     // And exit
     return 0;
+}
+
+void handleError(int fd){
+    fd = open("/sys/class/gpio/unexport", O_WRONLY);
+    if (fd == -1) {
+        perror("Unable to open /sys/class/gpio/unexport at 2.");
+		close(fd);
+		exit(1);
+    }
+	if (write(fd, "16", 2) != 2) {
+        perror("Error writing to /sys/class/gpio/unexport");
+        close(fd);
+		exit(1);
+    }
+	close(fd);
 }
